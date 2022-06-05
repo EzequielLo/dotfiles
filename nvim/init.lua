@@ -395,17 +395,6 @@ extensions = {
   },
 }
 
--- Enable telescope fzf native
-require('telescope').load_extension 'fzf'
---Add leader shortcuts
-function TelescopeFiles()
-  local telescope_opts = { previewer = false }
-  local ok = pcall(require('telescope.builtin').git_files, telescope_opts)
-  if not ok then
-    require('telescope.builtin').find_files(telescope_opts)
-  end
-end
-
 --Add leader shortcuts
 vim.keymap.set('n', '<C-b>', require('telescope.builtin').buffers)
 vim.keymap.set('n', '<C-p>', function()
