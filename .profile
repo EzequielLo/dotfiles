@@ -37,5 +37,7 @@ export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 
 export PATH=$PATH:$JAVA_HOME/bin
 
+export PATH=/opt/apache-maven-3.8.5/bin:$PATH
+
 export SPRING_HOME=~/spring-boot-cli-2.6.6-bin/spring-2.6.6 
 export PATH=$SPRING_HOME/bin:$PATH

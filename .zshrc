@@ -107,25 +107,19 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
+export PATH=”$HOME/.cargo/bin:$PATH”
+
 source $HOME/.profile
-
-
-export PATH=$PATH:/usr/local/go/bin
-export GOPATH=$HOME/go
-export PATH=$PATH:$GOPATH/bin
-
 
 export ZSH=$HOME/.oh-my-zsh
 
-export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 
-export PATH=$PATH:$JAVA_HOME/bin
-
 alias config-nvim='nvim ~/.config/nvim'
 
-export SPRING_HOME=~/spring-boot-cli-2.6.6-bin/spring-2.6.6 
-export PATH=$SPRING_HOME/bin:$PATH
 
+alias tor='~/tor-browser-linux64-11.0.11_en-US/tor-browser_en-US/'
+alias torlaunch='./start-tor-browser.desktop'
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-
+alias emacs="emacsclient -c -a 'emacs'"
+alias sourcetmux='tmux source ~/.tmux.conf'

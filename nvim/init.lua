@@ -340,7 +340,7 @@ neogit.setup {
 }
 
 --shortcuts
-vim.keymap.set('n', '<leader>gd', ':DiffviewOpen<CR>', { silent = true })
+vim.keymap.set('n', '<leader>do', ':DiffviewOpen<CR>', { silent = true })
 vim.keymap.set('n', '<leader>ng', ':Neogit<CR>', { silent = true })
 -- Highlight on yank
 local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
@@ -371,6 +371,7 @@ require('gitsigns').setup {
 
 require'hop'.setup { keys = 'etovxqpdygfblzhckisuran' }
 
+local action_state = require('telescope.actions.state')
 -- Telescope
 require('telescope').setup {
 	defaults = {
@@ -382,6 +383,7 @@ require('telescope').setup {
 			i = {
 				['<C-u>'] = false,
 				['<C-d>'] = false,
+        ["<c-a>"] = function() print(vim.inspect(action_state.get_selected_entry())) end 
 			},
 		},
 	},
@@ -394,7 +396,7 @@ extensions = {
     },
   },
 }
-
+require('telescope').load_extension('fzf')
 --Add leader shortcuts
 vim.keymap.set('n', '<C-b>', require('telescope.builtin').buffers)
 vim.keymap.set('n', '<C-p>', function()
@@ -484,23 +486,34 @@ lsp_installer.settings({
 
 local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
 local on_attach = function(client, bufnr)
-	 local opts = { buffer = bufnr }
-  vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
-  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
-  vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
-  vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
-  vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
-  vim.keymap.set('n', '<leader>wa', vim.lsp.buf.add_workspace_folder, opts)
-  vim.keymap.set('n', '<leader>wr', vim.lsp.buf.remove_workspace_folder, opts)
-  vim.keymap.set('n', '<leader>wl', function()
-    vim.inspect(vim.lsp.buf.list_workspace_folders())
-  end, opts)
-  vim.keymap.set('n', '<leader>D', vim.lsp.buf.type_definition, opts)
-  vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
-  vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
-  vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, opts)
-  vim.keymap.set('n', '<leader>so', require('telescope.builtin').lsp_document_symbols, opts)
-  vim.api.nvim_create_user_command("Format", vim.lsp.buf.formatting, {})
+
+	local function buf_set_keymap(...)
+		vim.api.nvim_buf_set_keymap(bufnr, ...)
+	end
+
+	-- Mappings.
+	local opts = { noremap = true, silent = true }
+
+	-- See `:help vim.lsp.*` for documentation on any of the below functions
+	-- leaving only what I actually use...
+	buf_set_keymap("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts)
+	buf_set_keymap("n", "gr", "<cmd>Telescope lsp_references<CR>", opts)
+
+	buf_set_keymap("n", "<C-j>", "<cmd>Telescope lsp_document_symbols<CR>", opts)
+	buf_set_keymap("n", "<C-K>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", opts)
+
+	buf_set_keymap("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts)
+	buf_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
+	buf_set_keymap("n", "<leader>D", "<cmd>Telescope lsp_type_definitions<CR>", opts)
+	buf_set_keymap("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", opts)
+	buf_set_keymap("n", "<leader>ca", "<cmd>Telescope lsp_code_actions<CR>", opts)
+	vim.keymap.set("n", "gt", vim.lsp.buf.type_definition, {buffer=0})
+	vim.keymap.set("n", "gi", vim.lsp.buf.implementation, {buffer=0})
+	vim.keymap.set("n", "<leader>dj", vim.diagnostic.goto_next, {buffer=0})
+	vim.keymap.set("n", "<leader>dk", vim.diagnostic.goto_prev, {buffer=0})
+	vim.keymap.set("n", "<leader>dl", "<cmd>Telescope diagnostics<cr>", {buffer=0})
+	vim.keymap.set("n", "<leader>r", vim.lsp.buf.rename, {buffer=0})
+	vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, {buffer=0})
 
   local rc = client.resolved_capabilities 
   if client.name == "angularls" then
