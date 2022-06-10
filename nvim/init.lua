@@ -11,10 +11,8 @@ require('packer').startup(function(use)
   -- UI to select things (files, grep results, open buffers...)
   use { 'nvim-telescope/telescope.nvim', requires = { 'nvim-lua/plenary.nvim' },}
   use {'nvim-telescope/telescope-fzf-native.nvim', run = 'make' }
-	use "nvim-telescope/telescope-file-browser.nvim"
-	use 'nvim-telescope/telescope-ui-select.nvim' 
-	-- Icons
-	use "kyazdani42/nvim-web-devicons"
+  -- Icons
+  use "kyazdani42/nvim-web-devicons"
   -- Add indentation guides even on blank lines
   use 'lukas-reineke/indent-blankline.nvim'
   -- Highlight, edit, and navigate code using a fast incremental parsing library
@@ -39,15 +37,16 @@ require('packer').startup(function(use)
   use 'numToStr/Comment.nvim' -- "gc" to comment visual regions/lines
   use 'editorconfig/editorconfig-vim'
   use 'mfussenegger/nvim-lint'
-	use 'nvim-lualine/lualine.nvim' -- Fancier statusline
+  use 'nvim-lualine/lualine.nvim' -- Fancier statusline
+  use {"folke/trouble.nvim",requires = "kyazdani42/nvim-web-devicons",}
   -- Git
   use { 'lewis6991/gitsigns.nvim', requires = { 'nvim-lua/plenary.nvim' } }
-  use 'sindrets/diffview.nvim'
-  use 'TimUntersberger/neogit'	
+  use 'tpope/vim-fugitive'
+  use 'tpope/vim-rhubarb'
   -- Theme
   use "EzequielLo/custom_git.nvim"
-	-- Rust
-	use 'rust-lang/rust.vim'
+  -- Rust
+  use 'rust-lang/rust.vim'
 end) 
 vim.cmd[[
 runtime lua/autopairs.vim
@@ -76,6 +75,7 @@ vim.cmd [[
 syntax enable
 colorscheme custom_git
 ]]
+-- Rust
 vim.g.rustfmt_autosave = 1
 vim.g.rustfmt_emit_files = 1
 vim.g.rustfmt_fail_silently = 0
@@ -106,6 +106,8 @@ vim.cmd([[
 ]])
 --Enable Comment.nvim
 require('Comment').setup()
+-- Trouble
+require("trouble").setup {}
 --Remap space as leader key
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 vim.g.mapleader = ' '
@@ -121,18 +123,17 @@ vim.api.nvim_set_keymap('i', '<A-k>', '<Esc>:m .-2<CR>==gi', { noremap = true})
 vim.api.nvim_set_keymap('v', '<A-j>', ':m \'>+1<CR>gv=gv', { noremap = true})
 vim.api.nvim_set_keymap('v', '<A-k>', ':m \'<-2<CR>gv=gv', { noremap = true})
 --Git
-local neogit = require('neogit')
-neogit.setup {
-  disable_signs = true,
-  disable_hint = true,
-  disable_builtin_notifications = true,
-  integrations = {
-    diffview = true
-  }
-}
---shortcuts
-vim.keymap.set('n', '<leader>dv', ':DiffviewOpen<CR>', { silent = true })
-vim.keymap.set('n', '<leader>ng', ':Neogit<CR>', { silent = true })
+--Fugitive shortcuts
+vim.keymap.set('n', '<leader>ga', ':Git add %:p<CR><CR>', { silent = true })
+vim.keymap.set('n', '<leader>gg', ':GBrowse<CR>', { silent = true })
+vim.keymap.set('n', '<leader>gd', ':Gdiff<CR>', { silent = true })
+vim.keymap.set('n', '<leader>ge', ':Gedit<CR>', { silent = true })
+vim.keymap.set('n', '<leader>gr', ':Gread<CR>', { silent = true })
+vim.keymap.set('n', '<leader>gw', ':Gwrite<CR><CR>', { silent = true })
+vim.keymap.set('n', '<leader>gl', ':silent! Glog<CR>:bot copen<CR>', { silent = true })
+vim.keymap.set('n', '<leader>gm', ':Gmove<Space>', { silent = true })
+vim.keymap.set('n', '<leader>go', ':Git checkout<Space>', { silent = true })
+
 -- Highlight on yank
 local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
 vim.api.nvim_create_autocmd('TextYankPost', {
@@ -157,44 +158,62 @@ require('gitsigns').setup {
     changedelete = { text = '~' },
   },
 }
-local action_state = require('telescope.actions.state')
--- Telescope
+--Telescope
 require('telescope').setup {
-	defaults = {
-    layout_strategy = "vertical",
-    prompt_prefix = " ",
-    sorting_strategy = "ascending",
-    cache_picker = {
-      num_pickers = 20,
+  defaults = {
+    mappings = {
+      i = {
+        ['<C-u>'] = false,
+        ['<C-d>'] = false,
+      },
     },
-		mappings = {
-			i = {
-        ["<c-a>"] = function() print(vim.inspect(action_state.get_selected_entry())) end 
-			},
-		},
-	},
-extensions = {
-		file_browser = {
-      hijack_netrw = true,
-			grouped = true,
-      previewer = false,
-	},
-		["ui-select"] = {
-      require("telescope.themes").get_dropdown {}
-		},
+  },
+  extensions = {
+    fzf = {
+      override_generic_sorter = true, --override the generic sorter
+      override_file_sorter = true, --override the file sorter
+      case_mode = 'smart_case', --or "ignore_case" or "respect_case"
+      --the default case_mode is "smart_case"
+    },
   },
 }
-require('telescope').load_extension('fzf')
-require("telescope").load_extension("file_browser")
-require("telescope").load_extension("ui-select")
+require('telescope').load_extension 'fzf'
+
 --Add leader shortcuts
-vim.keymap.set('n', '<C-b>', require('telescope.builtin').buffers)
-vim.keymap.set('n', '<C-f>', require('telescope.builtin').current_buffer_fuzzy_find)
-vim.keymap.set('n', '<C-p>', function()
-  require('telescope.builtin').find_files { previewer = false }
+function TelescopeFiles()
+  local telescope_opts = { previewer = false }
+  local ok = pcall(require('telescope.builtin').git_files, telescope_opts)
+  if not ok then
+    require('telescope.builtin').find_files(telescope_opts)
+  end
+end
+
+vim.keymap.set('n', '<C-p>', TelescopeFiles)
+vim.keymap.set('n', '<leader><space>', function()
+  require('telescope.builtin').buffers { sort_lastused = true }
 end)
-vim.keymap.set('n', '<leader>sp', require('telescope.builtin').live_grep)
-vim.keymap.set("n","<C-t>",":Telescope file_browser<CR>",{ noremap = true })
+
+vim.keymap.set(
+  'n',
+  '<C-f>',
+  function()
+  require('telescope.builtin').current_buffer_fuzzy_find()
+  end
+)
+vim.keymap.set('n', '<leader>h', function() require('telescope.builtin').help_tags() end)
+vim.keymap.set('n', '<leader>st', function() require('telescope.builtin').tags() end)
+vim.keymap.set('n', '<leader>?', function() require('telescope.builtin').oldfiles() end)
+vim.keymap.set('n', '<leader>sd', function() require('telescope.builtin').grep_string() end)
+vim.keymap.set('n', '<leader>sp', function() require('telescope.builtin').live_grep() end)
+
+vim.keymap.set('n', '<leader>so', function() require('telescope.builtin').tags { only_current_buffer = true } end)
+
+vim.keymap.set('n', '<leader>gc', function() require('telescope.builtin').git_commits() end)
+vim.keymap.set('n', '<leader>gb', function() require('telescope.builtin').git_branches() end)
+vim.keymap.set('n', '<leader>gs', function() require('telescope.builtin').git_status() end)
+vim.keymap.set('n', '<leader>gp', function() require('telescope.builtin').git_bcommits() end)
+vim.keymap.set('n', '<leader>wo', function() require('telescope.builtin').lsp_document_symbols() end)
+
 -- Treesitter configuration
 require('nvim-treesitter.configs').setup {
   highlight = {
@@ -262,7 +281,21 @@ lsp_installer.settings({
         }
     }
 })
--- LSP settings
+local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+
+-- Use an on_attach function to only map the following keys
+-- after the language server attaches to the current buffer
+local lsp_installer = require("nvim-lsp-installer")
+lsp_installer.settings({
+    ui = {
+        icons = {
+            server_installed = "✓",
+            server_pending = "➜",
+            server_uninstalled = "✗"
+        }
+    }
+})
+
 local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
 local on_attach = function(client, bufnr)
 
@@ -277,27 +310,37 @@ local on_attach = function(client, bufnr)
 	-- leaving only what I actually use...
 	buf_set_keymap("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts)
 	buf_set_keymap("n", "gr", "<cmd>Telescope lsp_references<CR>", opts)
+
 	buf_set_keymap("n", "<C-j>", "<cmd>Telescope lsp_document_symbols<CR>", opts)
 	buf_set_keymap("n", "<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", opts)
+
 	buf_set_keymap("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts)
 	buf_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
 	buf_set_keymap("n", "<leader>D", "<cmd>Telescope lsp_type_definitions<CR>", opts)
 	buf_set_keymap("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", opts)
 	buf_set_keymap("n", "<leader>ca", "<cmd>Telescope lsp_code_actions<CR>", opts)
+	vim.keymap.set("n", "gt", vim.lsp.buf.type_definition, {buffer=0})
+	vim.keymap.set("n", "gi", vim.lsp.buf.implementation, {buffer=0})
+	vim.keymap.set("n", "<leader>dj", vim.diagnostic.goto_next, {buffer=0})
+	vim.keymap.set("n", "<leader>dk", vim.diagnostic.goto_prev, {buffer=0})
 	vim.keymap.set("n", "<leader>dl", "<cmd>Telescope diagnostics<cr>", {buffer=0})
 	vim.keymap.set("n", "<leader>r", vim.lsp.buf.rename, {buffer=0})
 	vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, {buffer=0})
-	buf_set_keymap('n', '<leader>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', opts)
-	buf_set_keymap('n', '<leader>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', opts)
-	buf_set_keymap('n', '<leader>wl', '<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>', opts)
- 
-	vim.api.nvim_buf_create_user_command(bufnr, "Format", vim.lsp.buf.formatting, {})
+	-- buf_set_keymap('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
+	-- buf_set_keymap('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
+	-- buf_set_keymap('n', '<leader>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', opts)
+	-- buf_set_keymap('n', '<leader>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', opts)
+	-- buf_set_keymap('n', '<leader>wl', '<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>', opts)
+	-- buf_set_keymap('n', '<leader>D', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+	-- buf_set_keymap('n', '<leader>ca', '<cmd>lua vim.lsp.buf.code_action()<CR>', opts)
+	-- buf_set_keymap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
+	-- buf_set_keymap('n', '<leader>e', '<cmd>lua vim.diagnostic.open_float()<CR>', opts)
+	-- buf_set_keymap('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
+	-- buf_set_keymap('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<CR>', opts)
+	-- buf_set_keymap('n', '<leader>q', '<cmd>lua vim.diagnostic.setloclist()<CR>', opts)
+	-- buf_set_keymap("n", "<leader>f", "<cmd>lua vim.lsp.buf.formatting()<CR>", opts)
 
-  local rc = client.resolved_capabilities 
-  if client.name == "angularls" then
-    rc.rename = false
-  end
-	if client.resolved_capabilities.document_formatting then
+	if client.server_capabilities.document_formatting then
 		vim.cmd([[
 			augroup formatting
 				autocmd! * <buffer>
@@ -306,8 +349,9 @@ local on_attach = function(client, bufnr)
 			augroup END
 		]])
 	end
+
 	-- Set autocommands conditional on server_capabilities
-	if client.resolved_capabilities.document_highlight then
+	if client.server_capabilities.document_highlight then
 		vim.cmd([[
 			augroup lsp_document_highlight
 				autocmd! * <buffer>
@@ -317,21 +361,7 @@ local on_attach = function(client, bufnr)
 		]])
 	end
 end
--- organize imports
-function OrganizeImports(timeoutms)
-	local params = vim.lsp.util.make_range_params()
-	params.context = { only = { "source.organizeImports" } }
-	local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, timeoutms)
-	for _, res in pairs(result or {}) do
-		for _, r in pairs(res.result or {}) do
-			if r.edit then
-				vim.lsp.util.apply_workspace_edit(r.edit, "UTF-8")
-			else
-				vim.lsp.buf.execute_command(r.command)
-			end
-		end
-	end
-end
+
 lsp_installer.setup{}
 local lspconfig = require('lspconfig')
 
@@ -381,6 +411,50 @@ lspconfig.jsonls.setup{
   flags = {
     debounce_text_changes = 150,
   },
+	filetypes = {"json", "jsonc"},
+  settings = {
+    json = {
+      -- Schemas https://www.schemastore.org
+      schemas = {
+        {
+          fileMatch = {"package.json"},
+          url = "https://json.schemastore.org/package.json"
+        },
+        {
+          fileMatch = {"tsconfig*.json"},
+          url = "https://json.schemastore.org/tsconfig.json"
+        },
+        {
+          fileMatch = {
+            ".prettierrc",
+            ".prettierrc.json",
+            "prettier.config.json"
+          },
+          url = "https://json.schemastore.org/prettierrc.json"
+        },
+        {
+          fileMatch = {".eslintrc", ".eslintrc.json"},
+          url = "https://json.schemastore.org/eslintrc.json"
+        },
+        {
+          fileMatch = {".babelrc", ".babelrc.json", "babel.config.json"},
+          url = "https://json.schemastore.org/babelrc.json"
+        },
+        {
+          fileMatch = {"now.json", "vercel.json"},
+          url = "https://json.schemastore.org/now.json"
+        },
+        {
+          fileMatch = {
+            ".stylelintrc",
+            ".stylelintrc.json",
+            "stylelint.config.json"
+          },
+          url = "http://json.schemastore.org/stylelintrc.json"
+        },
+      }
+    }
+  }
 }
 
 lspconfig.eslint.setup{
@@ -413,6 +487,21 @@ lspconfig.rust_analyzer.setup {
   },
   capabilities = capabilities,
 }
+-- organize imports
+function OrganizeImports(timeoutms)
+  local params = vim.lsp.util.make_range_params()
+  params.context = { only = { "source.organizeImports" } }
+  local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, timeoutms)
+  for _, res in pairs(result or {}) do
+    for _, r in pairs(res.result or {}) do
+      if r.edit then
+        vim.lsp.util.apply_workspace_edit(r.edit, "UTF-8")
+      else
+        vim.lsp.buf.execute_command(r.command)
+      end
+    end
+  end
+end
 
 local luasnip = require 'luasnip'
 require("luasnip.loaders.from_vscode").lazy_load()
