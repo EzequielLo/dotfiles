@@ -119,6 +119,11 @@ _G.packer_plugins = {
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-cmp",
     url = "https://github.com/hrsh7th/nvim-cmp"
   },
+  ["nvim-colorizer.lua"] = {
+    loaded = true,
+    path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-colorizer.lua",
+    url = "https://github.com/norcalli/nvim-colorizer.lua"
+  },
   ["nvim-lint"] = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-lint",
@@ -143,6 +148,11 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-treesitter-textobjects",
     url = "https://github.com/nvim-treesitter/nvim-treesitter-textobjects"
+  },
+  ["nvim-ts-rainbow"] = {
+    loaded = true,
+    path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-ts-rainbow",
+    url = "https://github.com/p00f/nvim-ts-rainbow"
   },
   ["nvim-web-devicons"] = {
     loaded = true,
@@ -183,6 +193,11 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/vim-closetag",
     url = "https://github.com/alvan/vim-closetag"
+  },
+  ["vim-dirvish"] = {
+    loaded = true,
+    path = "/home/eche/.local/share/nvim/site/pack/packer/start/vim-dirvish",
+    url = "https://github.com/justinmk/vim-dirvish"
   },
   ["vim-fugitive"] = {
     loaded = true,
