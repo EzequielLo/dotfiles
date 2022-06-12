@@ -115,10 +115,10 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 require('Comment').setup()
 
 -- Trouble
-require("trouble").setup {}
+require("trouble").setup ()
 
 -- CSS colors
-require 'colorizer'.setup()
+require'colorizer'.setup()
 
 --Set statusbar
 require('lualine').setup {
