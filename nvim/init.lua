@@ -11,9 +11,9 @@ vim.api.nvim_create_autocmd('BufWritePost', { command = 'source <afile> | Packer
 
 require('packer').startup(function(use)
   -- Package manager
-  use 'wbthomason/packer.nvim' 
+  use 'wbthomason/packer.nvim'
 	-- Menu
-	use "justinmk/vim-dirvish" 
+	use "justinmk/vim-dirvish"
   -- UI to select things (files, grep results, open buffers...)
   use {'nvim-telescope/telescope.nvim', requires = { 'nvim-lua/plenary.nvim' },}
   use {'nvim-telescope/telescope-fzf-native.nvim', run = 'make' }
@@ -27,14 +27,14 @@ require('packer').startup(function(use)
   use 'nvim-treesitter/nvim-treesitter-textobjects'
 	use "p00f/nvim-ts-rainbow"
   -- LSP
-  use 'neovim/nvim-lspconfig' 
+  use 'neovim/nvim-lspconfig'
   use 'williamboman/nvim-lsp-installer'
   -- Autocompletion plugin
-  use 'hrsh7th/nvim-cmp'   
+  use 'hrsh7th/nvim-cmp'
   use 'hrsh7th/cmp-nvim-lsp'
   use 'saadparwaiz1/cmp_luasnip'
   -- Snippets
-  use 'L3MON4D3/LuaSnip' --plugin   
+  use 'L3MON4D3/LuaSnip' --plugin
   use 'johnpapa/vscode-angular-snippets'
   use 'andys8/vscode-jest-snippets'
   -- IDE
@@ -45,7 +45,6 @@ require('packer').startup(function(use)
   use 'editorconfig/editorconfig-vim'
 	use "norcalli/nvim-colorizer.lua" --css colors
   use 'mfussenegger/nvim-lint'
-  use 'nvim-lualine/lualine.nvim' -- Fancier statusline
   use {"folke/trouble.nvim",requires = "kyazdani42/nvim-web-devicons",}
   -- Git
   use { 'lewis6991/gitsigns.nvim', requires = { 'nvim-lua/plenary.nvim' } }
@@ -55,7 +54,6 @@ require('packer').startup(function(use)
   use "EzequielLo/custom_git.nvim"
   -- Rust
   use 'rust-lang/rust.vim'
-
 end)
 
 vim.cmd[[
@@ -87,9 +85,7 @@ vim.cmd [[
 syntax enable
 colorscheme custom_git
 ]]
-vim.cmd[[
-let g:netrw_banner = 0
-]]
+vim.g.netrw_banner = 0
 
 -- Rust
 vim.g.rustfmt_autosave = 1
@@ -120,29 +116,34 @@ require("trouble").setup ()
 -- CSS colors
 require'colorizer'.setup()
 
---Set statusbar
-require('lualine').setup {
-  options = {
-    icons_enabled = false,
-    theme = 'auto',
-    component_separators = '|',
-    section_separators = '',
-  },
-}
-
 -- Lint
 require('lint').linters_by_ft = {
   typescript = {'eslint'},
   javascript = {'eslint'},
 }
 
-vim.cmd([[
-  augroup NvimLint
-    au!
-    au BufRead * lua require('lint').try_lint()
-    au BufWritePost * lua require('lint').try_lint()
-  augroup end
-]])
+local augroups = {}
+
+augroups.misc = {
+	trigger_nvim_lint = {
+		event = {"BufEnter", "BufNew", "InsertLeave", "TextChanged"},
+		pattern = "<buffer>",
+		callback = function ()
+			require("lint").try_lint()
+		end,
+	},
+}
+
+for group, commands in pairs(augroups) do
+	local augroup = vim.api.nvim_create_augroup("AU_"..group, {clear = true})
+
+	for _, opts in pairs(commands) do
+		local event = opts.event
+		opts.event = nil
+		opts.group = augroup
+		vim.api.nvim_create_autocmd(event, opts)
+	end
+end
 
 -- Indent blankline
 require('indent_blankline').setup {
@@ -199,7 +200,7 @@ require('nvim-treesitter.configs').setup {
 	  rainbow = {
     enable = true,
 		disable = { "jsx", "tsx", "html" },
-    extended_mode = true, 
+    extended_mode = true,
     max_file_lines = nil, -- Do not enable for files with more than n lines, int
 	},
   incremental_selection = {
@@ -294,8 +295,9 @@ local on_attach = function(client, bufnr)
 	vim.keymap.set("n", "<leader>dl", "<cmd>Telescope diagnostics<cr>", {buffer=0})
 	vim.keymap.set("n", "<leader>r", vim.lsp.buf.rename, {buffer=0})
 	vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, {buffer=0})
-	
-  local rc = client.resolved_capabilities 
+  vim.api.nvim_buf_create_user_command(bufnr, "Format", vim.lsp.buf.formatting, {})
+
+  local rc = client.resolved_capabilities
   if client.name == "angularls" then
     rc.rename = false
   end
@@ -465,6 +467,14 @@ lspconfig.rust_analyzer.setup {
   capabilities = capabilities,
 }
 
+lspconfig.clangd.setup{
+	capabilities = capabilities,
+	on_attach = on_attach,
+	flags = {
+    debounce_text_changes = 150,
+  },
+}
+
 local luasnip = require 'luasnip'
 require("luasnip.loaders.from_vscode").lazy_load()
 
@@ -575,3 +585,205 @@ vim.keymap.set('n', '<leader>lr', ':LspRestart<CR>', { silent = true })
 vim.keymap.set('n', '<leader>li', ':LspInfo<CR>', { silent = true })
 vim.keymap.set('n', '<leader>ls', ':LspStart<CR>', { silent = true })
 vim.keymap.set('n', '<leader>lt', ':LspStop<CR>', { silent = true })
+
+-- Statusbar
+local fn = vim.fn
+local api = vim.api
+local lint_active = {}
+local M = {}
+
+M.trunc_width = setmetatable({
+  git_status = 90,
+  filename = 140,
+}, {
+  __index = function()
+    return 80
+  end,
+})
+
+M.is_truncated = function(_, width)
+  local current_width = api.nvim_win_get_width(0)
+  return current_width < width
+end
+
+M.modes = setmetatable({
+  ["n"] = "N",
+  ["no"] = "N·P",
+  ["v"] = "V",
+  ["V"] = "V·L",
+  [""] = "V·B", -- this is not ^V, but it's , they're different
+  ["s"] = "S",
+  ["S"] = "S·L",
+  [""] = "S·B", -- same with this one, it's not ^S but it's 
+  ["i"] = "I",
+  ["ic"] = "I",
+  ["R"] = "R",
+  ["Rv"] = "V·R",
+  ["c"] = "C",
+  ["cv"] = "V·E",
+  ["ce"] = "E",
+  ["r"] = "P",
+  ["rm"] = "RM",
+  ["r?"] = "C",
+  ["!"] = "S",
+  ["t"] = "T",
+}, {
+  __index = function()
+    return "U" -- handle edge cases
+  end,
+})
+
+M.get_current_mode = function(self)
+  local current_mode = api.nvim_get_mode().mode
+  return string.format(" [%s] ", self.modes[current_mode]):upper()
+end
+
+M.get_git_status = function(self)
+  -- use fallback because it doesn't set this variable on the initial `BufEnter`
+  local signs = vim.b.gitsigns_status_dict
+    or { head = "", added = 0, changed = 0, removed = 0 }
+  local is_head_empty = signs.head ~= ""
+
+  if self:is_truncated(self.trunc_width.git_status) then
+    return is_head_empty and string.format(" [ %s] ", signs.head or "") or ""
+  end
+
+  -- stylua: ignore
+  return is_head_empty
+    and string.format(
+      " [+%s ~%s -%s] [ %s] ",
+      signs.added,
+      signs.changed,
+      signs.removed,
+      signs.head
+    )
+    or ""
+end
+
+M.get_filepath = function(self)
+  local filepath = fn.fnamemodify(fn.expand "%", ":.:h")
+
+  if
+    filepath == ""
+    or filepath == "."
+    or self:is_truncated(self.trunc_width.filename)
+  then
+    return " "
+  end
+
+  return string.format(" %%<%s/", filepath)
+end
+
+M.get_filename = function()
+  local filename = fn.expand "%:t"
+  return filename == "" and "" or filename
+end
+
+M.get_filetype = function()
+  local filetype = vim.bo.filetype
+
+  -- stylua: ignore
+  return filetype == ""
+    and " No FT "
+    or string.format("[ft: %s] ", filetype):lower()
+end
+
+M.get_fileformat = function()
+  return string.format("[%s]", vim.o.fileformat):lower()
+end
+
+M.get_line_col = function()
+  return "[%l:%c]"
+end
+
+M.lsp_progress = function()
+  local lsp = vim.lsp.util.get_progress_messages()[1]
+
+  if lsp then
+    local name = lsp.name or ""
+    local msg = lsp.message or ""
+    local percentage = lsp.percentage or 0
+    local title = lsp.title or ""
+    return string.format(
+      " %%<%s: %s %s (%s%%%%) ",
+      name,
+      title,
+      msg,
+      percentage
+    )
+  end
+
+  return ""
+end
+
+function M.enable_lint()
+  local lint = require('lint')
+  if not lint.linters_by_ft[vim.bo.filetype] then
+    return
+  end
+  local bufnr = api.nvim_get_current_buf()
+  lint_active[bufnr] = true
+  api.nvim_buf_attach(bufnr, false, {
+    on_detach = function(_, b)
+      lint_active[b] = nil
+    end,
+  })
+  local group = 'lint_' .. bufnr
+  api.nvim_create_augroup(group, {})
+  api.nvim_create_autocmd({'BufWritePost', 'BufEnter', 'BufLeave'}, {
+    group = group,
+    buffer = bufnr,
+    callback = function()
+      lint.try_lint()
+    end
+  })
+end
+
+function M.setup()
+  require('me.lsp.conf').setup()
+  require('lint').linters_by_ft = {
+    javascript = {'eslint'},
+    typescript = {'esliny'},
+  }
+end
+
+M.set_active = function(self)
+  return table.concat {
+    "%#StatusLine#",
+    self:get_current_mode(),
+    "%#StatusLine#",
+		self:get_filename(),
+    "%#StatusLineAccent#",
+		self:get_git_status(),
+    "%#StatusLine#",
+    "%=",
+    self:lsp_progress(),
+    self:get_filetype(),
+		self:enable_lint(),
+  }
+end
+
+M.set_inactive = function()
+  return "%#StatusLineNC#" .. "%= %F %="
+end
+
+M.set_explorer = function()
+  return "%#StatusLineNC#"
+end
+
+Statusline = setmetatable(M, {
+  __call = function(self, mode)
+    return self["set_" .. mode](self)
+  end,
+})
+
+-- set statusline
+vim.cmd [[
+  augroup Statusline
+  au!
+  au WinEnter,BufEnter * setlocal statusline=%!v:lua.Statusline('active')
+  au WinLeave,BufLeave * setlocal statusline=%!v:lua.Statusline('inactive')
+  au WinEnter,BufEnter,FileType neo-tree setlocal statusline=%!v:lua.Statusline('explorer')
+  augroup END
+]]
+
