@@ -164,11 +164,6 @@ _G.packer_plugins = {
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/plenary.nvim",
     url = "https://github.com/nvim-lua/plenary.nvim"
   },
-  ["rust.vim"] = {
-    loaded = true,
-    path = "/home/eche/.local/share/nvim/site/pack/packer/start/rust.vim",
-    url = "https://github.com/rust-lang/rust.vim"
-  },
   ["telescope-fzf-native.nvim"] = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/telescope-fzf-native.nvim",
@@ -178,11 +173,6 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/telescope.nvim",
     url = "https://github.com/nvim-telescope/telescope.nvim"
-  },
-  ["trouble.nvim"] = {
-    loaded = true,
-    path = "/home/eche/.local/share/nvim/site/pack/packer/start/trouble.nvim",
-    url = "https://github.com/folke/trouble.nvim"
   },
   ["vim-closetag"] = {
     loaded = true,

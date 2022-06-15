@@ -45,15 +45,12 @@ require('packer').startup(function(use)
   use 'editorconfig/editorconfig-vim'
 	use "norcalli/nvim-colorizer.lua" --css colors
   use 'mfussenegger/nvim-lint'
-  use {"folke/trouble.nvim",requires = "kyazdani42/nvim-web-devicons",}
   -- Git
   use { 'lewis6991/gitsigns.nvim', requires = { 'nvim-lua/plenary.nvim' } }
   use 'tpope/vim-fugitive'
   use 'tpope/vim-rhubarb'
   -- Theme
   use "EzequielLo/custom_git.nvim"
-  -- Rust
-  use 'rust-lang/rust.vim'
 end)
 
 vim.cmd[[
@@ -77,7 +74,7 @@ vim.wo.signcolumn = 'yes'
 vim.o.showmode = false
 vim.o.shiftwidth = 2
 vim.o.tabstop = 2
-
+vim.o.cmdheight=0
 --Set colorscheme
 vim.o.background = "light"
 vim.o.termguicolors = true
@@ -86,12 +83,6 @@ syntax enable
 colorscheme custom_git
 ]]
 vim.g.netrw_banner = 0
-
--- Rust
-vim.g.rustfmt_autosave = 1
-vim.g.rustfmt_emit_files = 1
-vim.g.rustfmt_fail_silently = 0
-vim.g.rust_clip_command = 'xclip -selection clipboard'
 
 -- Set completeopt to have a better completion experience
 vim.o.completeopt = 'menuone,noselect'
@@ -109,9 +100,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 
 --Enable Comment.nvim
 require('Comment').setup()
-
--- Trouble
-require("trouble").setup ()
 
 -- CSS colors
 require'colorizer'.setup()
@@ -257,6 +245,12 @@ vim.diagnostic.config {
   update_in_insert = true,
 }
 
+local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
+for type, icon in pairs(signs) do
+  local hl = "DiagnosticSign" .. type
+  vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
+end
+
 -- Native LSP Setup
 local lsp_installer = require("nvim-lsp-installer")
 lsp_installer.settings({
@@ -295,7 +289,7 @@ local on_attach = function(client, bufnr)
 	vim.keymap.set("n", "<leader>dl", "<cmd>Telescope diagnostics<cr>", {buffer=0})
 	vim.keymap.set("n", "<leader>r", vim.lsp.buf.rename, {buffer=0})
 	vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, {buffer=0})
-  vim.api.nvim_buf_create_user_command(bufnr, "Format", vim.lsp.buf.formatting, {})
+  vim.api.nvim_buf_create_user_command(bufnr, "Format", vim.lsp.buf.format, {})
 
   local rc = client.resolved_capabilities
   if client.name == "angularls" then
@@ -447,26 +441,6 @@ lspconfig.eslint.setup{
   },
 }
 
-lspconfig.rust_analyzer.setup {
-  on_attach = on_attach,
-  flags = {
-    debounce_text_changes = 150,
-  },
-  settings = {
-    ["rust-analyzer"] = {
-      cargo = {
-        allFeatures = true,
-      },
-      completion = {
-	   	 postfix = {
-	    	  enable = false,
-	      },
-      },
-    },
-  },
-  capabilities = capabilities,
-}
-
 lspconfig.clangd.setup{
 	capabilities = capabilities,
 	on_attach = on_attach,
@@ -607,7 +581,7 @@ M.is_truncated = function(_, width)
 end
 
 M.modes = setmetatable({
-  ["n"] = "N",
+  ["n"] = " N ",
   ["no"] = "N·P",
   ["v"] = "V",
   ["V"] = "V·L",
@@ -647,11 +621,10 @@ M.get_git_status = function(self)
   if self:is_truncated(self.trunc_width.git_status) then
     return is_head_empty and string.format(" [ %s] ", signs.head or "") or ""
   end
-
   -- stylua: ignore
   return is_head_empty
     and string.format(
-      " [+%s ~%s -%s] [ %s] ",
+      " +%s ~%s -%s |  %s ",
       signs.added,
       signs.changed,
       signs.removed,
@@ -662,7 +635,6 @@ end
 
 M.get_filepath = function(self)
   local filepath = fn.fnamemodify(fn.expand "%", ":.:h")
-
   if
     filepath == ""
     or filepath == "."
@@ -670,7 +642,6 @@ M.get_filepath = function(self)
   then
     return " "
   end
-
   return string.format(" %%<%s/", filepath)
 end
 
@@ -681,7 +652,6 @@ end
 
 M.get_filetype = function()
   local filetype = vim.bo.filetype
-
   -- stylua: ignore
   return filetype == ""
     and " No FT "
@@ -698,7 +668,6 @@ end
 
 M.lsp_progress = function()
   local lsp = vim.lsp.util.get_progress_messages()[1]
-
   if lsp then
     local name = lsp.name or ""
     local msg = lsp.message or ""
@@ -712,54 +681,42 @@ M.lsp_progress = function()
       percentage
     )
   end
-
   return ""
 end
 
-function M.enable_lint()
-  local lint = require('lint')
-  if not lint.linters_by_ft[vim.bo.filetype] then
-    return
-  end
-  local bufnr = api.nvim_get_current_buf()
-  lint_active[bufnr] = true
-  api.nvim_buf_attach(bufnr, false, {
-    on_detach = function(_, b)
-      lint_active[b] = nil
-    end,
-  })
-  local group = 'lint_' .. bufnr
-  api.nvim_create_augroup(group, {})
-  api.nvim_create_autocmd({'BufWritePost', 'BufEnter', 'BufLeave'}, {
-    group = group,
-    buffer = bufnr,
-    callback = function()
-      lint.try_lint()
-    end
-  })
-end
-
-function M.setup()
-  require('me.lsp.conf').setup()
-  require('lint').linters_by_ft = {
-    javascript = {'eslint'},
-    typescript = {'esliny'},
+M.get_lsp_diagnostic = function(self)
+local result = {}
+  local levels = {
+    errors = "Error",
+    warnings = "Warn"
   }
+
+  for k, level in pairs(levels) do
+    result[k] = vim.tbl_count(vim.diagnostic.get(0, { severity = level }))
+  end
+
+  local errors = ""
+  local warnings = ""
+
+	return string.format(
+      " :%s :%s ",
+      result['errors'] or 0, result['warnings'] or 0
+    )
 end
 
 M.set_active = function(self)
   return table.concat {
     "%#StatusLine#",
+    self:get_lsp_diagnostic(),
     self:get_current_mode(),
     "%#StatusLine#",
 		self:get_filename(),
     "%#StatusLineAccent#",
-		self:get_git_status(),
     "%#StatusLine#",
     "%=",
     self:lsp_progress(),
-    self:get_filetype(),
-		self:enable_lint(),
+		self:get_git_status(),
+		--self:get_filetype(),
   }
 end
 
