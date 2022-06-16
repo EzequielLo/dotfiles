@@ -1,21 +1,21 @@
 // Place your key bindings in this file to override the defaults
 [
-	 {
-        "key": "Ctrl+Shift+E",
-        "command": "workbench.view.explorer"
-    },
-    {
-        "key": "Ctrl+Shift+E",
-        "command": "-workbench.view.explorer"
-    },
-    {
-        "key": "Ctrl+Shift+E",
-        "command": "workbench.action.toggleSidebarVisibility",
-        "when": "explorerViewletVisible"
-    },
-    {
-        "key": "Ctrl+Shift+E",
-        "command": "-workbench.action.toggleSidebarVisibility",
-        "when": "explorerViewletVisible"
-    }
+  {
+    "key": "Ctrl+Shift+E",
+    "command": "workbench.view.explorer"
+  },
+  {
+    "key": "Ctrl+Shift+E",
+    "command": "-workbench.view.explorer"
+  },
+  {
+    "key": "Ctrl+Shift+E",
+    "command": "workbench.action.toggleSidebarVisibility",
+    "when": "explorerViewletVisible"
+  },
+  {
+    "key": "Ctrl+Shift+E",
+    "command": "-workbench.action.toggleSidebarVisibility",
+    "when": "explorerViewletVisible"
+  }
 ]

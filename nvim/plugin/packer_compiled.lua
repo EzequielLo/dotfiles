@@ -109,6 +109,11 @@ _G.packer_plugins = {
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/indent-blankline.nvim",
     url = "https://github.com/lukas-reineke/indent-blankline.nvim"
   },
+  ["nvim-autopairs"] = {
+    loaded = true,
+    path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-autopairs",
+    url = "https://github.com/windwp/nvim-autopairs"
+  },
   ["nvim-cmp"] = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-cmp",
@@ -144,6 +149,11 @@ _G.packer_plugins = {
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-treesitter-textobjects",
     url = "https://github.com/nvim-treesitter/nvim-treesitter-textobjects"
   },
+  ["nvim-ts-autotag"] = {
+    loaded = true,
+    path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-ts-autotag",
+    url = "https://github.com/windwp/nvim-ts-autotag"
+  },
   ["nvim-ts-rainbow"] = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-ts-rainbow",
@@ -174,11 +184,6 @@ _G.packer_plugins = {
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/telescope.nvim",
     url = "https://github.com/nvim-telescope/telescope.nvim"
   },
-  ["vim-closetag"] = {
-    loaded = true,
-    path = "/home/eche/.local/share/nvim/site/pack/packer/start/vim-closetag",
-    url = "https://github.com/alvan/vim-closetag"
-  },
   ["vim-dirvish"] = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/vim-dirvish",
@@ -198,11 +203,6 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/vim-rhubarb",
     url = "https://github.com/tpope/vim-rhubarb"
-  },
-  ["vim-surround"] = {
-    loaded = true,
-    path = "/home/eche/.local/share/nvim/site/pack/packer/start/vim-surround",
-    url = "https://github.com/tpope/vim-surround"
   },
   ["vscode-angular-snippets"] = {
     loaded = true,

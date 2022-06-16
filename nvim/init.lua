@@ -38,13 +38,13 @@ require('packer').startup(function(use)
   use 'johnpapa/vscode-angular-snippets'
   use 'andys8/vscode-jest-snippets'
   -- IDE
-  use 'alvan/vim-closetag'
-  use 'tpope/vim-surround'
   use 'tpope/vim-repeat'
   use 'numToStr/Comment.nvim' -- "gc" to comment visual regions/lines
   use 'editorconfig/editorconfig-vim'
 	use "norcalli/nvim-colorizer.lua" --css colors
   use 'mfussenegger/nvim-lint'
+  use "windwp/nvim-autopairs"
+  use 'windwp/nvim-ts-autotag'
   -- Git
   use { 'lewis6991/gitsigns.nvim', requires = { 'nvim-lua/plenary.nvim' } }
   use 'tpope/vim-fugitive'
@@ -52,14 +52,6 @@ require('packer').startup(function(use)
   -- Theme
   use "EzequielLo/custom_git.nvim"
 end)
-
-vim.cmd[[
-runtime lua/autopairs.vim
-let g:closetag_filenames = '*.html,*.js,*.jsx,*.ts,*.tsx'
-" Remap surround to lowercase s so it does not add an empty space
-xmap s <Plug>VSurround
-filetype plugin indent on
-]]
 
 vim.o.laststatus=3
 vim.o.hlsearch = false
@@ -82,10 +74,12 @@ vim.cmd [[
 syntax enable
 colorscheme custom_git
 ]]
+
 vim.g.netrw_banner = 0
 
 -- Set completeopt to have a better completion experience
 vim.o.completeopt = 'menuone,noselect'
+
 vim.cmd[[let $FZF_DEFAULT_COMMAND = 'rg --files --hidden']]
 
 -- Highlight on yank
@@ -103,6 +97,8 @@ require('Comment').setup()
 
 -- CSS colors
 require'colorizer'.setup()
+
+require("nvim-autopairs").setup {}
 
 -- Lint
 require('lint').linters_by_ft = {
@@ -191,6 +187,9 @@ require('nvim-treesitter.configs').setup {
     extended_mode = true,
     max_file_lines = nil, -- Do not enable for files with more than n lines, int
 	},
+  autotag = {
+    enable = true,
+  },
   incremental_selection = {
     enable = true,
 		    keymaps = {
@@ -438,14 +437,6 @@ lspconfig.eslint.setup{
   },
   handlers = {
     ['window/showMessageRequest'] = function(_, result, _) return result end,
-  },
-}
-
-lspconfig.clangd.setup{
-	capabilities = capabilities,
-	on_attach = on_attach,
-	flags = {
-    debounce_text_changes = 150,
   },
 }
 
@@ -743,4 +734,3 @@ vim.cmd [[
   au WinEnter,BufEnter,FileType neo-tree setlocal statusline=%!v:lua.Statusline('explorer')
   augroup END
 ]]
-

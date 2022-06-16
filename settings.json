@@ -125,5 +125,9 @@
   "editor.inlayHints.enabled": false,
   "editor.insertSpaces": false,
   "editor.comments.insertSpace": false,
-  "workbench.activityBar.visible": false
+  "workbench.activityBar.visible": false,
+  "editor.multiCursorModifier": "ctrlCmd",
+  "vscode-neovim.logPath": "/usr/local/bin/nvim",
+  "vscode-neovim.neovimExecutablePaths.linux": "/usr/local/bin/nvim",
+  "git.confirmSync": false
 }
