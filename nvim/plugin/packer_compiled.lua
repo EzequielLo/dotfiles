@@ -89,10 +89,10 @@ _G.packer_plugins = {
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/cmp_luasnip",
     url = "https://github.com/saadparwaiz1/cmp_luasnip"
   },
-  ["custom_git.nvim"] = {
+  ["diffview.nvim"] = {
     loaded = true,
-    path = "/home/eche/.local/share/nvim/site/pack/packer/start/custom_git.nvim",
-    url = "https://github.com/EzequielLo/custom_git.nvim"
+    path = "/home/eche/.local/share/nvim/site/pack/packer/start/diffview.nvim",
+    url = "https://github.com/sindrets/diffview.nvim"
   },
   ["editorconfig-vim"] = {
     loaded = true,
@@ -108,6 +108,11 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/indent-blankline.nvim",
     url = "https://github.com/lukas-reineke/indent-blankline.nvim"
+  },
+  neogit = {
+    loaded = true,
+    path = "/home/eche/.local/share/nvim/site/pack/packer/start/neogit",
+    url = "https://github.com/TimUntersberger/neogit"
   },
   ["nvim-autopairs"] = {
     loaded = true,
@@ -164,6 +169,11 @@ _G.packer_plugins = {
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-web-devicons",
     url = "https://github.com/kyazdani42/nvim-web-devicons"
   },
+  ["onedark.nvim"] = {
+    loaded = true,
+    path = "/home/eche/.local/share/nvim/site/pack/packer/start/onedark.nvim",
+    url = "https://github.com/EzequielLo/onedark.nvim"
+  },
   ["packer.nvim"] = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/packer.nvim",
@@ -183,6 +193,11 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/telescope.nvim",
     url = "https://github.com/nvim-telescope/telescope.nvim"
+  },
+  ["trouble.nvim"] = {
+    loaded = true,
+    path = "/home/eche/.local/share/nvim/site/pack/packer/start/trouble.nvim",
+    url = "https://github.com/folke/trouble.nvim"
   },
   ["vim-dirvish"] = {
     loaded = true,

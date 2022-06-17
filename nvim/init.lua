@@ -45,12 +45,15 @@ require('packer').startup(function(use)
   use 'mfussenegger/nvim-lint'
   use "windwp/nvim-autopairs"
   use 'windwp/nvim-ts-autotag'
+  use "folke/trouble.nvim"
   -- Git
   use { 'lewis6991/gitsigns.nvim', requires = { 'nvim-lua/plenary.nvim' } }
+  use { 'TimUntersberger/neogit', requires = 'nvim-lua/plenary.nvim' }
+  use { 'sindrets/diffview.nvim', requires = 'nvim-lua/plenary.nvim' }
   use 'tpope/vim-fugitive'
   use 'tpope/vim-rhubarb'
   -- Theme
-  use "EzequielLo/custom_git.nvim"
+  use 'EzequielLo/onedark.nvim'
 end)
 
 vim.o.laststatus=3
@@ -68,11 +71,12 @@ vim.o.shiftwidth = 2
 vim.o.tabstop = 2
 vim.o.cmdheight=0
 --Set colorscheme
-vim.o.background = "light"
+vim.o.background = "dark"
 vim.o.termguicolors = true
+vim.g.tokyonight_style = "storm"
 vim.cmd [[
 syntax enable
-colorscheme custom_git
+colorscheme onedark
 ]]
 
 vim.g.netrw_banner = 0
@@ -99,6 +103,8 @@ require('Comment').setup()
 require'colorizer'.setup()
 
 require("nvim-autopairs").setup {}
+
+require("trouble").setup {}
 
 -- Lint
 require('lint').linters_by_ft = {
@@ -145,6 +151,16 @@ require('gitsigns').setup {
     changedelete = { text = '~' },
   },
 }
+
+local neogit = require('neogit')
+
+neogit.setup {
+  integrations = {
+    diffview = true
+  },
+}
+
+require("diffview").setup{}
 
 --Telescope
 require('telescope').setup {
@@ -502,37 +518,17 @@ vim.api.nvim_set_keymap('v', '<A-j>', ':m \'>+1<CR>gv=gv', { noremap = true})
 vim.api.nvim_set_keymap('v', '<A-k>', ':m \'<-2<CR>gv=gv', { noremap = true})
 
 --Git
-vim.keymap.set('n', '<leader>ga', ':Git add %:p<CR><CR>', { silent = true })
 vim.keymap.set('n', '<leader>gg', ':GBrowse<CR>', { silent = true })
-vim.keymap.set('n', '<leader>gd', ':Gdiff<CR>', { silent = true })
-vim.keymap.set('n', '<leader>ge', ':Gedit<CR>', { silent = true })
-vim.keymap.set('n', '<leader>gr', ':Gread<CR>', { silent = true })
-vim.keymap.set('n', '<leader>gw', ':Gwrite<CR><CR>', { silent = true })
-vim.keymap.set('n', '<leader>gl', ':silent! Glog<CR>:bot copen<CR>', { silent = true })
-vim.keymap.set('n', '<leader>gm', ':Gmove<Space>', { silent = true })
-vim.keymap.set('n', '<leader>go', ':Git checkout<Space>', { silent = true })
+vim.keymap.set('n', '<leader>ng', ':Neogit kind=split<CR>', { silent = true });
+vim.keymap.set('n', '<leader>nc', ':Neogit commit<CR>', { silent = true });
 
 --vim.keymap.set("n","<C-t>",":Telescope file_browser<CR>",{ noremap = true })
 vim.keymap.set('n', '<C-p>', TelescopeFiles)
-vim.keymap.set('n', '<leader><space>', function()
-  require('telescope.builtin').buffers { sort_lastused = true }
-end)
-
-vim.keymap.set(
-  'n',
-  '<C-f>',
-  function()
-  require('telescope.builtin').current_buffer_fuzzy_find()
-  end
-)
-vim.keymap.set('n', '<leader>h', function() require('telescope.builtin').help_tags() end)
-vim.keymap.set('n', '<leader>st', function() require('telescope.builtin').tags() end)
+vim.keymap.set('n', '<leader><b>', function()require('telescope.builtin').buffers { sort_lastused = true }end)
+vim.keymap.set('n','<C-f>',function()require('telescope.builtin').current_buffer_fuzzy_find() end)
 vim.keymap.set('n', '<leader>?', function() require('telescope.builtin').oldfiles() end)
 vim.keymap.set('n', '<leader>sd', function() require('telescope.builtin').grep_string() end)
 vim.keymap.set('n', '<leader>sp', function() require('telescope.builtin').live_grep() end)
-
-vim.keymap.set('n', '<leader>so', function() require('telescope.builtin').tags { only_current_buffer = true } end)
-
 vim.keymap.set('n', '<leader>gc', function() require('telescope.builtin').git_commits() end)
 vim.keymap.set('n', '<leader>gb', function() require('telescope.builtin').git_branches() end)
 vim.keymap.set('n', '<leader>gs', function() require('telescope.builtin').git_status() end)
