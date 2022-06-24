@@ -17,5 +17,17 @@
     "key": "Ctrl+Shift+E",
     "command": "-workbench.action.toggleSidebarVisibility",
     "when": "explorerViewletVisible"
+  },
+  {
+    "key": "ctrl+j",
+    "command": "editor.action.joinLines"
+  },
+  {
+    "key": "ctrl+j",
+    "command": "-workbench.action.togglePanel"
+  },
+  {
+    "key": "ctrl+alt+t",
+    "command": "workbench.action.tasks.terminate"
   }
 ]

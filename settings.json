@@ -2,12 +2,9 @@
   "diffEditor.renderSideBySide": false,
   "editor.accessibilitySupport": "off",
   "editor.detectIndentation": true,
-  "editor.fontFamily": "'JetBrainsMono Nerd Font', monospace",
-  "debug.console.fontFamily": "'JetBrainsMono Nerd Font', monospace",
   "editor.inlineSuggest.enabled": true,
   "editor.lineHeight": 1.6,
   "editor.linkedEditing": true,
-  "editor.minimap.enabled": false,
   "editor.smoothScrolling": true,
   "editor.suggestSelection": "first",
   "editor.unicodeHighlight.invisibleCharacters": true,
@@ -19,9 +16,17 @@
   "files.simpleDialog.enable": true,
   "git.allowForcePush": true,
   "git.enableCommitSigning": true,
+  "git.showPushSuccessNotification": true,
   "git.suggestSmartCommit": false,
+  "gitlens.advanced.abbreviatedShaLength": 8,
+  "gitlens.codeLens.enabled": false,
+  "gitlens.currentLine.enabled": false,
+  "gitlens.hovers.currentLine.over": "line",
+  "gitlens.keymap": "alternate",
   "javascript.referencesCodeLens.enabled": true,
   "javascript.referencesCodeLens.showOnAllFunctions": true,
+  "notebook.lineNumbers": "on",
+  "notebook.output.textLineLimit": 0,
   "prettier.endOfLine": "auto",
   "security.workspace.trust.enabled": false,
   "telemetry.telemetryLevel": "off",
@@ -33,12 +38,13 @@
   "window.dialogStyle": "custom",
   "window.titleBarStyle": "custom",
   "workbench.editor.closeOnFileDelete": true,
+  "workbench.iconTheme": "material-icon-theme",
   "workbench.list.smoothScrolling": true,
-  "workbench.preferredLightColorTheme": "GitHub Light Colorblind (Beta)",
+  "workbench.preferredDarkColorTheme": "Default Dark+",
+  "workbench.preferredLightColorTheme": "Default Light+",
   "workbench.startupEditor": "none",
   "workbench.tree.indent": 14,
   "workbench.tree.renderIndentGuides": "always",
-
   // exclude from fuzzy finder
   "search.exclude": {
     "**/.git": true,
@@ -59,10 +65,6 @@
     "**/yarn.lock": true
   },
   // languages
-  "files.associations": {
-    "*.svx": "markdown",
-    ".env*": "makefile"
-  },
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -86,9 +88,6 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
 
-  "git.showPushSuccessNotification": true,
-  "notebook.lineNumbers": "on",
-  "notebook.output.textLineLimit": 0,
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
@@ -98,11 +97,12 @@
     "tsconfig.json": "tsconfig.json, jsconfig.json",
     "*.csproj": "*.csproj, nuget.config"
   },
+  "editor.fontFamily": "'JetBrains Mono'",
+  "debug.console.fontFamily": "'JetBrains Mono', monospace",
   "editor.bracketPairColorization.enabled": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
   "editor.unicodeHighlight.ambiguousCharacters": false,
   "window.customMenuBarAltFocus": false,
-  "workbench.colorTheme": "GitHub Light Colorblind (Beta)",
   "editor.tabSize": 2,
   "editor.fontLigatures": true,
   "workbench.sideBar.location": "right",
@@ -117,17 +117,16 @@
   "emmet.includeLanguages": {
     "javascript": "html"
   },
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnPaste": true,
   "editor.formatOnSave": true,
   "editor.formatOnType": true,
-  "[rust]": {},
-  "editor.inlayHints.enabled": false,
   "editor.insertSpaces": false,
   "editor.comments.insertSpace": false,
-  "workbench.activityBar.visible": false,
-  "editor.multiCursorModifier": "ctrlCmd",
-  "vscode-neovim.logPath": "/usr/local/bin/nvim",
   "vscode-neovim.neovimExecutablePaths.linux": "/usr/local/bin/nvim",
-  "git.confirmSync": false
+  "git.confirmSync": false,
+  "editor.cursorStyle": "line-thin",
+  "workbench.activityBar.visible": false,
+  "workbench.colorTheme": "modus-vivendi",
+  "window.menuBarVisibility": "compact",
+  "editor.minimap.enabled": false
 }
