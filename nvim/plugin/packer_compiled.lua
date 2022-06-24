@@ -129,6 +129,21 @@ _G.packer_plugins = {
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-colorizer.lua",
     url = "https://github.com/norcalli/nvim-colorizer.lua"
   },
+  ["nvim-dap"] = {
+    loaded = true,
+    path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-dap",
+    url = "https://github.com/mfussenegger/nvim-dap"
+  },
+  ["nvim-dap-ui"] = {
+    loaded = true,
+    path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-dap-ui",
+    url = "https://github.com/rcarriga/nvim-dap-ui"
+  },
+  ["nvim-dap-virtual-text"] = {
+    loaded = true,
+    path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-dap-virtual-text",
+    url = "https://github.com/theHamsta/nvim-dap-virtual-text"
+  },
   ["nvim-lint"] = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-lint",
@@ -163,11 +178,6 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-ts-rainbow",
     url = "https://github.com/p00f/nvim-ts-rainbow"
-  },
-  ["nvim-web-devicons"] = {
-    loaded = true,
-    path = "/home/eche/.local/share/nvim/site/pack/packer/start/nvim-web-devicons",
-    url = "https://github.com/kyazdani42/nvim-web-devicons"
   },
   ["onedark.nvim"] = {
     loaded = true,
@@ -204,20 +214,10 @@ _G.packer_plugins = {
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/vim-dirvish",
     url = "https://github.com/justinmk/vim-dirvish"
   },
-  ["vim-fugitive"] = {
-    loaded = true,
-    path = "/home/eche/.local/share/nvim/site/pack/packer/start/vim-fugitive",
-    url = "https://github.com/tpope/vim-fugitive"
-  },
   ["vim-repeat"] = {
     loaded = true,
     path = "/home/eche/.local/share/nvim/site/pack/packer/start/vim-repeat",
     url = "https://github.com/tpope/vim-repeat"
-  },
-  ["vim-rhubarb"] = {
-    loaded = true,
-    path = "/home/eche/.local/share/nvim/site/pack/packer/start/vim-rhubarb",
-    url = "https://github.com/tpope/vim-rhubarb"
   },
   ["vscode-angular-snippets"] = {
     loaded = true,

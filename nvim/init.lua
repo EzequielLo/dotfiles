@@ -17,8 +17,6 @@ require('packer').startup(function(use)
   -- UI to select things (files, grep results, open buffers...)
   use {'nvim-telescope/telescope.nvim', requires = { 'nvim-lua/plenary.nvim' },}
   use {'nvim-telescope/telescope-fzf-native.nvim', run = 'make' }
-  -- Icons
-  use "kyazdani42/nvim-web-devicons"
   -- Add indentation guides even on blank lines
   use 'lukas-reineke/indent-blankline.nvim'
   -- Highlight, edit, and navigate code using a fast incremental parsing library
@@ -37,7 +35,7 @@ require('packer').startup(function(use)
   use 'L3MON4D3/LuaSnip' --plugin
   use 'johnpapa/vscode-angular-snippets'
   use 'andys8/vscode-jest-snippets'
-  -- IDE
+  -- Core
   use 'tpope/vim-repeat'
   use 'numToStr/Comment.nvim' -- "gc" to comment visual regions/lines
   use 'editorconfig/editorconfig-vim'
@@ -46,12 +44,14 @@ require('packer').startup(function(use)
   use "windwp/nvim-autopairs"
   use 'windwp/nvim-ts-autotag'
   use "folke/trouble.nvim"
+  -- Dap
+  use 'mfussenegger/nvim-dap'
+  use 'rcarriga/nvim-dap-ui'
+  use 'theHamsta/nvim-dap-virtual-text'
   -- Git
-  use { 'lewis6991/gitsigns.nvim', requires = { 'nvim-lua/plenary.nvim' } }
+  use { 'lewis6991/gitsigns.nvim', requires = 'nvim-lua/plenary.nvim'}
   use { 'TimUntersberger/neogit', requires = 'nvim-lua/plenary.nvim' }
   use { 'sindrets/diffview.nvim', requires = 'nvim-lua/plenary.nvim' }
-  use 'tpope/vim-fugitive'
-  use 'tpope/vim-rhubarb'
   -- Theme
   use 'EzequielLo/onedark.nvim'
 end)
@@ -76,7 +76,7 @@ vim.o.termguicolors = true
 vim.g.tokyonight_style = "storm"
 vim.cmd [[
 syntax enable
-colorscheme onedark
+colorscheme custom_theme
 ]]
 
 vim.g.netrw_banner = 0
@@ -253,6 +253,88 @@ require('nvim-treesitter.configs').setup {
   },
 }
 
+-- Debugging
+local ok, dap = pcall(require, "dap")
+if not ok then return end
+
+require("nvim-dap-virtual-text").setup()
+require("dapui").setup({
+    layouts = {
+        {
+            elements = {
+                "console",
+            },
+            size = 7,
+            position = "bottom",
+        },
+        {
+            elements = {
+                -- Elements can be strings or table with id and size keys.
+                { id = "scopes", size = 0.25 },
+                "breakpoints",
+                "stacks",
+                "watches",
+            },
+            size = 40,
+            position = "left",
+        }
+    },
+})
+
+local dap, dapui = require("dap"), require("dapui")
+dap.listeners.after.event_initialized["dapui_config"] = function()
+  dapui.open(1)
+end
+dap.listeners.before.event_terminated["dapui_config"] = function()
+  dapui.close()
+end
+dap.listeners.before.event_exited["dapui_config"] = function()
+  dapui.close()
+end
+
+local home = os.getenv('HOME')
+local dap = require('dap')
+dap.adapters.node2 = {
+    type = 'executable',
+    command = 'node',
+    args = {home .. '/microsoft-sucks/vscode-node-debug2/out/src/nodeDebug.js'},
+}
+
+dap.configurations.javascript = {
+    {
+        name = 'Launch',
+        type = 'node2',
+        request = 'launch',
+        program = '${file}',
+        cwd = vim.loop.cwd(),
+        sourceMaps = true,
+        protocol = 'inspector',
+        console = 'integratedTerminal',
+    },
+    {
+        -- For this to work you need to make sure the node process
+        -- is started with the `--inspect` flag.
+        name = 'Attach to process',
+        type = 'node2',
+        request = 'attach',
+        processId = require('dap.utils').pick_process,
+    },
+}
+
+dap.configurations.typescript = {
+    {
+        name = "ts-node (Node2 with ts-node)",
+        type = "node2",
+        request = "launch",
+        cwd = vim.loop.cwd(),
+        runtimeArgs = { "-r", "ts-node/register" },
+        runtimeExecutable = "node",
+        args = {"--inspect", "${file}"},
+        sourceMaps = true,
+        skipFiles = { "<node_internals>/**", "node_modules/**" },
+    }
+}
+
 --Diagnostic settings
 vim.diagnostic.config {
   virtual_text = true,
@@ -260,7 +342,7 @@ vim.diagnostic.config {
   update_in_insert = true,
 }
 
-local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
+local signs = { Error = "➜" , Warn = "➜" , Hint = "➜" , Info = "➜"   }
 for type, icon in pairs(signs) do
   local hl = "DiagnosticSign" .. type
   vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
@@ -518,13 +600,11 @@ vim.api.nvim_set_keymap('v', '<A-j>', ':m \'>+1<CR>gv=gv', { noremap = true})
 vim.api.nvim_set_keymap('v', '<A-k>', ':m \'<-2<CR>gv=gv', { noremap = true})
 
 --Git
-vim.keymap.set('n', '<leader>gg', ':GBrowse<CR>', { silent = true })
 vim.keymap.set('n', '<leader>ng', ':Neogit kind=split<CR>', { silent = true });
 vim.keymap.set('n', '<leader>nc', ':Neogit commit<CR>', { silent = true });
 
 --vim.keymap.set("n","<C-t>",":Telescope file_browser<CR>",{ noremap = true })
 vim.keymap.set('n', '<C-p>', TelescopeFiles)
-vim.keymap.set('n', '<leader><b>', function()require('telescope.builtin').buffers { sort_lastused = true }end)
 vim.keymap.set('n','<C-f>',function()require('telescope.builtin').current_buffer_fuzzy_find() end)
 vim.keymap.set('n', '<leader>?', function() require('telescope.builtin').oldfiles() end)
 vim.keymap.set('n', '<leader>sd', function() require('telescope.builtin').grep_string() end)
@@ -546,6 +626,17 @@ vim.keymap.set('n', '<leader>lr', ':LspRestart<CR>', { silent = true })
 vim.keymap.set('n', '<leader>li', ':LspInfo<CR>', { silent = true })
 vim.keymap.set('n', '<leader>ls', ':LspStart<CR>', { silent = true })
 vim.keymap.set('n', '<leader>lt', ':LspStop<CR>', { silent = true })
+
+-- Dap
+vim.keymap.set("n", "<F5>", ":lua require'dap'.continue()<CR>")
+vim.keymap.set("n", "<F3>", ":lua require'dap'.step_over()<CR>")
+vim.keymap.set("n", "<F2>", ":lua require'dap'.step_into()<CR>")
+vim.keymap.set("n", "<F12>", ":lua require'dap'.step_out()<CR>")
+vim.keymap.set("n", "<leader>b", ":lua require'dap'.toggle_breakpoint()<CR>")
+vim.keymap.set("n", "<leader>B", ":lua require'dap'.set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>")
+vim.keymap.set("n", "<leader>lp", ":lua require'dap'.set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>")
+vim.keymap.set("n", "<leader>dr", ":lua require'dap'.repl.open()<CR>")
+vim.keymap.set("n", "<leader>dc", ":lua require'dap'.repl.run_to_cursor()<CR>")
 
 -- Statusbar
 local fn = vim.fn
@@ -606,12 +697,12 @@ M.get_git_status = function(self)
   local is_head_empty = signs.head ~= ""
 
   if self:is_truncated(self.trunc_width.git_status) then
-    return is_head_empty and string.format(" [ %s] ", signs.head or "") or ""
+    return is_head_empty and string.format(" [%s] ", signs.head or "") or ""
   end
   -- stylua: ignore
   return is_head_empty
     and string.format(
-      " +%s ~%s -%s |  %s ",
+      " +%s ~%s -%s | %s ",
       signs.added,
       signs.changed,
       signs.removed,
@@ -686,7 +777,7 @@ local result = {}
   local warnings = ""
 
 	return string.format(
-      " :%s :%s ",
+      " e:%s w:%s ",
       result['errors'] or 0, result['warnings'] or 0
     )
 end
@@ -730,3 +821,5 @@ vim.cmd [[
   au WinEnter,BufEnter,FileType neo-tree setlocal statusline=%!v:lua.Statusline('explorer')
   augroup END
 ]]
+
+
