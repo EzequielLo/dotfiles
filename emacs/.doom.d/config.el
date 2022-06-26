@@ -21,11 +21,16 @@
 ;; See 'C-h v doom-font' for documentation and more examples of what they
 ;; accept. For example:
 ;;
-(setq doom-font (font-spec :family "JetBrains Mono" :size 18)
-      doom-big-font (font-spec :family "JetBrains Mono" :size 20)
-      doom-variable-pitch-font (font-spec :family "JetBrains Mono" :size 24)
-      doom-unicode-font (font-spec :family "JetBrains Mono")
-      doom-serif-font (font-spec :family "JetBrains Mono" :weight 'light));; If you or Emacs can't find your font, use 'M-x describe-font' to look them
+(setq doom-font (font-spec :family "Cascadia Code" :size 16 :weight 'semi-light)
+      doom-variable-pitch-font (font-spec :family "Cascadia Code" :size 13))
+
+(setq doom-modeline-height 1) ; optional
+(custom-set-faces
+  '(mode-line ((t (:family "Cascadia Code PL" :height 0.9))))
+  '(mode-line-active ((t (:family "Cascadia Code PL" :height 0.9)))) ; For 29+
+  '(mode-line-inactive ((t (:family "Cascadia Code PL" :height 0.9)))))
+;;
+;; If you or Emacs can't find your font, use 'M-x describe-font' to look them
 ;; up, `M-x eval-region' to execute elisp code, and 'M-x doom/reload-font' to
 ;; refresh your font settings. If Emacs still can't find your font, it likely
 ;; wasn't installed correctly. Font issues are rarely Doom issues!
@@ -33,7 +38,7 @@
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-(setq doom-theme 'modus-vivendi)
+(setq doom-theme 'modus-operandi)
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
@@ -75,46 +80,11 @@
 ;;
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
-;;; Tree Sitter
-;; See also https://discourse.doomemacs.org/t/tree-sitter/2547
-;;; :tools lsp
-(after! lsp-mode
-  ;; Show where we are at the top of the buffer.
-  (setq lsp-headerline-breadcrumb-enable t)
 
-  ;; Make sure that TypeScript files only get formatted once, with eslint when
-  ;; present.
-  (setq-hook! 'typescript-mode-hook +format-with-lsp nil)
+(setq
+  tab-width 2
+  tab-always-indent t
+  indent-tabs-mode nil
+  fill-column 80
+  )
 
-  (defun my/eslint-format ()
-    (interactive
-     (if-let ((eslint (-first (lambda (wks)
-                                (eq 'eslint (lsp--client-server-id
-                                             (lsp--workspace-client wks))))
-                              (lsp-workspaces))))
-         (with-lsp-workspace eslint
-           (lsp-format-buffer))
-       (lsp-format-buffer))))
-  (setq-hook! 'typescript-mode-hook +format-with 'my/eslint-format))
-
-
-(set-face-attribute 'mode-line nil :font "JetBrains Mono 13")
-(setq doom-modeline-height 25     ;; sets modeline height
-      doom-modeline-bar-width 4   ;; sets right bar width
-      doom-modeline-persp-name t  ;; adds perspective name to modeline
-      doom-modeline-window-width-limit 0.25
-      doom-modeline-persp-icon t) ;; adds folder icon next to persp name
-
-;;; :ui treemacs
-;; Set the icons to be the same as in dired (all-the-icons).
-(setq doom-themes-treemacs-theme "doom-colors")
-;; Do not use variable pitch font for treemacs.
-(setq doom-themes-treemacs-enable-variable-pitch nil)
-
-
-;;; Tree Sitter
-(use-package! tree-sitter
-  :config
-  (require 'tree-sitter-langs)
-  (global-tree-sitter-mode)
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))

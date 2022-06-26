@@ -39,11 +39,10 @@ require('packer').startup(function(use)
   use 'tpope/vim-repeat'
   use 'numToStr/Comment.nvim' -- "gc" to comment visual regions/lines
   use 'editorconfig/editorconfig-vim'
-	use "norcalli/nvim-colorizer.lua" --css colors
   use 'mfussenegger/nvim-lint'
   use "windwp/nvim-autopairs"
   use 'windwp/nvim-ts-autotag'
-  use "folke/trouble.nvim"
+  use "mbbill/undotree"
   -- Dap
   use 'mfussenegger/nvim-dap'
   use 'rcarriga/nvim-dap-ui'
@@ -77,6 +76,7 @@ vim.g.tokyonight_style = "storm"
 vim.cmd [[
 syntax enable
 colorscheme custom_theme
+autocmd BufWritePre *.tsx,*.ts,*.jsx,*.js EslintFixAll
 ]]
 
 vim.g.netrw_banner = 0
@@ -99,12 +99,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 --Enable Comment.nvim
 require('Comment').setup()
 
--- CSS colors
-require'colorizer'.setup()
-
 require("nvim-autopairs").setup {}
-
-require("trouble").setup {}
 
 -- Lint
 require('lint').linters_by_ft = {
@@ -360,61 +355,59 @@ lsp_installer.settings({
     }
 })
 
-local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+
+local opts = { noremap=true, silent=true }
+vim.keymap.set('n', '<space>e', vim.diagnostic.open_float, opts)
+vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)
+vim.keymap.set('n', ']d', vim.diagnostic.goto_next, opts)
+vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist, opts)
+
+-- Use an on_attach function to only map the following keys
+-- after the language server attaches to the current buffer
 local on_attach = function(client, bufnr)
+  -- Enable completion triggered by <c-x><c-o>
+  vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 
-	local function buf_set_keymap(...)
-		vim.api.nvim_buf_set_keymap(bufnr, ...)
-	end
+  -- Mappings.
+  -- See `:help vim.lsp.*` for documentation on any of the below functions
+  local bufopts = { noremap=true, silent=true, buffer=bufnr }
+  vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
+  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
+  vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
+  vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
+  vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, bufopts)
+  vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, bufopts)
+  vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, bufopts)
+  vim.keymap.set('n', '<space>wl', function()
+    print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+  end, bufopts)
+  vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, bufopts)
+  vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, bufopts)
+  vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, bufopts)
+  vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
+  vim.keymap.set('n', '<space>f', vim.lsp.buf.formatting, bufopts)
 
-	-- Mappings.
-	local opts = { noremap = true, silent = true }
-	-- leaving only what I actually use...
-	buf_set_keymap("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts)
-	buf_set_keymap("n", "gr", "<cmd>Telescope lsp_references<CR>", opts)
-	buf_set_keymap("n", "<C-j>", "<cmd>Telescope lsp_document_symbols<CR>", opts)
-	buf_set_keymap("n", "<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", opts)
-	buf_set_keymap("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts)
-	buf_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
-	buf_set_keymap("n", "<leader>D", "<cmd>Telescope lsp_type_definitions<CR>", opts)
-	buf_set_keymap("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", opts)
-	buf_set_keymap("n", "<leader>ca", "<cmd>Telescope lsp_code_actions<CR>", opts)
-	vim.keymap.set("n", "gt", vim.lsp.buf.type_definition, {buffer=0})
-	vim.keymap.set("n", "gi", vim.lsp.buf.implementation, {buffer=0})
-	vim.keymap.set("n", "<leader>dj", vim.diagnostic.goto_next, {buffer=0})
-	vim.keymap.set("n", "<leader>dk", vim.diagnostic.goto_prev, {buffer=0})
-	vim.keymap.set("n", "<leader>dl", "<cmd>Telescope diagnostics<cr>", {buffer=0})
-	vim.keymap.set("n", "<leader>r", vim.lsp.buf.rename, {buffer=0})
-	vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, {buffer=0})
-  vim.api.nvim_buf_create_user_command(bufnr, "Format", vim.lsp.buf.format, {})
+  if client.server_capabilities.document_formatting then
+ 		vim.cmd([[
+ 			augroup formatting
+ 				autocmd! * <buffer>
+ 				autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_seq_sync()
+ 				autocmd BufWritePre <buffer> lua OrganizeImports(1000)
+ 			augroup END
+ 		]])
+ 	end
 
-  local rc = client.resolved_capabilities
-  if client.name == "angularls" then
-    rc.rename = false
-  end
-
-	if client.server_capabilities.document_formatting then
-		vim.cmd([[
-			augroup formatting
-				autocmd! * <buffer>
-				autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_seq_sync()
-				autocmd BufWritePre <buffer> lua OrganizeImports(1000)
-			augroup END
-		]])
-	end
-
-	-- Set autocommands conditional on server_capabilities
-	if client.server_capabilities.document_highlight then
-		vim.cmd([[
-			augroup lsp_document_highlight
-				autocmd! * <buffer>
-				autocmd CursorHold <buffer> lua vim.lsp.buf.document_highlight()
-				autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
-			augroup END
-		]])
-	end
+-- 	-- Set autocommands conditional on server_capabilities
+ 	if client.server_capabilities.document_highlight then
+ 		vim.cmd([[
+ 			augroup lsp_document_highlight
+ 				autocmd! * <buffer>
+ 				autocmd CursorHold <buffer> lua vim.lsp.buf.document_highlight()
+ 				autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
+ 			augroup END
+ 		]])
+ 	end
 end
-
 -- organize imports
 function OrganizeImports(timeoutms)
   local params = vim.lsp.util.make_range_params()
@@ -604,8 +597,8 @@ vim.keymap.set('n', '<leader>ng', ':Neogit kind=split<CR>', { silent = true });
 vim.keymap.set('n', '<leader>nc', ':Neogit commit<CR>', { silent = true });
 
 --vim.keymap.set("n","<C-t>",":Telescope file_browser<CR>",{ noremap = true })
-vim.keymap.set('n', '<C-p>', TelescopeFiles)
-vim.keymap.set('n','<C-f>',function()require('telescope.builtin').current_buffer_fuzzy_find() end)
+vim.keymap.set('n', '<leader>.', TelescopeFiles)
+vim.keymap.set('n','<leader>f',function()require('telescope.builtin').current_buffer_fuzzy_find() end)
 vim.keymap.set('n', '<leader>?', function() require('telescope.builtin').oldfiles() end)
 vim.keymap.set('n', '<leader>sd', function() require('telescope.builtin').grep_string() end)
 vim.keymap.set('n', '<leader>sp', function() require('telescope.builtin').live_grep() end)
@@ -614,12 +607,6 @@ vim.keymap.set('n', '<leader>gb', function() require('telescope.builtin').git_br
 vim.keymap.set('n', '<leader>gs', function() require('telescope.builtin').git_status() end)
 vim.keymap.set('n', '<leader>gp', function() require('telescope.builtin').git_bcommits() end)
 vim.keymap.set('n', '<leader>wo', function() require('telescope.builtin').lsp_document_symbols() end)
-
--- Diagnostic keymaps
-vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
-vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
-vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist)
 
 --LSP management
 vim.keymap.set('n', '<leader>lr', ':LspRestart<CR>', { silent = true })

@@ -19,15 +19,15 @@
     "when": "explorerViewletVisible"
   },
   {
-    "key": "ctrl+j",
-    "command": "editor.action.joinLines"
+    "key": "alt+x",
+    "command": "workbench.action.showCommands"
   },
   {
-    "key": "ctrl+j",
-    "command": "-workbench.action.togglePanel"
+    "key": "alt+x",
+    "command": "-workbench.action.showCommands"
   },
   {
-    "key": "ctrl+alt+t",
-    "command": "workbench.action.tasks.terminate"
+    "key": "ctrl+shift+p",
+    "command": "-workbench.action.showCommands"
   }
 ]
